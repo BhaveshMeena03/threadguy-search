@@ -151,7 +151,11 @@ async def search_stream(
 
     async def event_source():
         try:
-            payload = json.dumps({"hits": [h.model_dump() for h in hits]})
+            # A bare array, not an object. The page passes this event's parsed
+            # payload straight to renderHits, so wrapping it in {"hits": ...}
+            # silently rendered "no matching moments" while the answer streamed
+            # in fine — the timestamps, which are the whole point, vanished.
+            payload = json.dumps([h.model_dump() for h in hits])
             yield f"event: hits\ndata: {payload}\n\n"
             if not hits:
                 yield f"event: refusal\ndata: {json.dumps({'text': REFUSAL_ANSWER})}\n\n"
