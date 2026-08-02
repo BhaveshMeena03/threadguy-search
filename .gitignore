@@ -1,0 +1,10 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+redteam_report.md
+data/episodes.json
+/tmp/
+
+deploy/*.log
+data/.asset_cache/

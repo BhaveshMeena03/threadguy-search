@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Threadguy Search — ask the streams anything</title>
+<meta name="description" content="Search every Threadguy stream by meaning and jump to the exact moment on YouTube. Free, no login, open source.">
+<!-- Social preview (X/Discord/Telegram unfurl) -->
+<meta property="og:title" content="Threadguy Search — ask the streams anything">
+<meta property="og:description" content="Search every episode by meaning and jump to the exact moment on YouTube. Free, no login, open source.">
+<meta property="og:image" content="https://threadguy-search.onrender.com/demo/og-image.png">
+<meta property="og:url" content="https://threadguy-search.onrender.com/demo/podcast.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Threadguy Search — ask the streams anything">
+<meta name="twitter:description" content="Search every episode by meaning and jump to the exact moment on YouTube. Free, no login, open source.">
+<meta name="twitter:image" content="https://threadguy-search.onrender.com/demo/og-image.png">
+<style>
+  :root{
+    --bg:#0b0e11;--panel:#12161c;--line:#232a33;--text:#e6e8ea;
+    --muted:#8a939e;--green:#16c784;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);min-height:100vh;
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    display:flex;flex-direction:column;align-items:center;padding:0 16px}
+  .banner{width:100%;background:#2b2410;color:#e8c157;font-size:12px;
+    text-align:center;padding:6px 12px;margin:0 -16px}
+  .wrap{width:100%;max-width:680px;padding:40px 0 80px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;
+    gap:14px;margin-bottom:22px;flex-wrap:wrap}
+  .brand{font-weight:800;font-size:15px;letter-spacing:.5px}
+  .brand span{color:var(--green)}
+  /* Reads as a feature, not a footnote: filled, green, on the right. */
+  .navbtn{display:inline-flex;align-items:center;gap:8px;background:#16c78418;
+    border:1px solid #16c78466;color:var(--green);border-radius:10px;
+    padding:10px 18px;font-size:15px;font-weight:700;text-decoration:none;
+    white-space:nowrap;transition:background .15s,border-color .15s}
+  .navbtn:hover{background:#16c78430;border-color:var(--green)}
+  .navbtn .arrow{transition:transform .15s}
+  .navbtn:hover .arrow{transform:translateX(3px)}
+  @media(max-width:560px){
+    .topbar{flex-direction:column;align-items:flex-start;gap:10px}
+    .navbtn{width:100%;justify-content:center}
+  }
+  h1{font-size:30px;font-weight:800;line-height:1.2;margin-bottom:8px}
+  h1 em{color:var(--green);font-style:normal}
+  .sub{color:var(--muted);margin-bottom:26px}
+  form{display:flex;gap:10px;margin-bottom:14px}
+  #q{flex:1;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;color:var(--text);padding:14px 16px;font-size:16px;
+    outline:none}
+  #q:focus{border-color:var(--green)}
+  button{background:var(--green);color:var(--bg);border:none;border-radius:12px;
+    font-weight:700;padding:0 22px;cursor:pointer;font-size:15px}
+  button:disabled{opacity:.5;cursor:default}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:30px}
+  .chip{font-size:13px;background:transparent;color:var(--green);
+    border:1px solid #16c78455;border-radius:16px;padding:6px 12px;cursor:pointer}
+  .chip:hover{background:#16c78418}
+  .answer{background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:18px 20px;margin-bottom:22px;white-space:pre-wrap;
+    display:none}
+  .answer.show{display:block}
+  .answer h3{font-size:12px;text-transform:uppercase;letter-spacing:.8px;
+    color:var(--muted);margin-bottom:10px}
+  .hits h3{font-size:12px;text-transform:uppercase;letter-spacing:.8px;
+    color:var(--muted);margin:0 0 12px}
+  .hit{display:block;text-decoration:none;color:inherit;background:var(--panel);
+    border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+    margin-bottom:10px;transition:border-color .15s}
+  .hit:hover{border-color:var(--green)}
+  .hit-top{display:flex;align-items:center;gap:10px;margin-bottom:6px;
+    flex-wrap:wrap}
+  .play{color:var(--green);font-weight:700;font-size:13px;white-space:nowrap}
+  .watch{margin-left:auto;color:var(--green);font-size:12px;white-space:nowrap}
+  .ep{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;max-width:100%}
+  .quote{font-size:13px;color:#8a939e;display:-webkit-box;
+    -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .empty{color:var(--muted)}
+  .spin{display:none;color:var(--muted);margin-bottom:20px}
+  .spin.show{display:block}
+  .foot{color:var(--muted);font-size:12px;margin-top:40px;border-top:1px solid
+    var(--line);padding-top:16px}
+  .eps{margin-top:44px}
+  .eps h2{font-size:18px;margin-bottom:4px}
+  .eps .sub2{color:var(--muted);font-size:13px;margin-bottom:16px}
+  details.epcard{background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;margin-bottom:10px;overflow:hidden}
+  details.epcard summary{cursor:pointer;padding:14px 16px;font-weight:600;
+    list-style:none;display:flex;align-items:center;gap:10px}
+  details.epcard summary::-webkit-details-marker{display:none}
+  details.epcard summary .tw{color:var(--green);font-size:12px;transition:transform .15s}
+  details.epcard[open] summary .tw{transform:rotate(90deg)}
+  .ep-body{padding:0 16px 16px;font-size:14px;color:#c7ccd2;white-space:normal;overflow-wrap:break-word}
+  .ep-body h3,.ep-body strong{color:var(--text)}
+  .ep-body ul{padding-left:18px;margin:8px 0}
+  .ep-body li{margin:4px 0}
+  .ts{color:var(--green);text-decoration:none;font-variant-numeric:tabular-nums;
+    font-weight:600}
+  .ts:hover{text-decoration:underline}
+  .ep-link{display:inline-block;margin-top:10px;color:var(--green);
+    font-size:13px;text-decoration:none}
+  .ep-link:hover{text-decoration:underline}
+  .share{background:transparent;color:var(--muted);border:1px solid var(--line);
+    border-radius:8px;font-size:12px;padding:4px 10px;cursor:pointer;
+    float:right;font-weight:400}
+  .share:hover{color:var(--green);border-color:var(--green)}
+  /* Mobile */
+  @media (max-width:520px){
+    h1{font-size:24px}
+    .sub{font-size:14px}
+    form{flex-direction:column}
+    form button{padding:13px}
+    .banner{font-size:11px}
+  }
+</style>
+</head>
+<body>
+<div class="banner">
+  Searches auto-generated captions from public Threadguy streams ·
+  informational, not financial advice · an independent project, not affiliated.
+</div>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">MARKET <span>BUBBLE</span> · search</div>
+    <span style="display:inline-flex;gap:10px;flex-wrap:wrap">
+    <a class="navbtn" href="/demo/assets.html">📊 Every token they've analyzed
+      <span class="arrow">→</span></a>
+    <a class="navbtn" href="/demo/concierge.html">🐂 Bullpen Concierge
+      <span class="arrow">→</span></a>
+    </span>
+  </div>
+  <h1>Ask <em>Threadguy's</em> streams anything.</h1>
+  <p class="sub">Search every episode by meaning, not keywords — and jump
+  straight to the moment they said it.</p>
+
+  <form id="f">
+    <input id="q" placeholder="e.g. what did they say about liquidation?"
+      autocomplete="off" maxlength="2000">
+    <button id="go" type="submit">Search</button>
+  </form>
+
+  <div class="chips">
+    <button class="chip">what's a seed phrase and why does it matter?</button>
+    <button class="chip">how does leverage cause liquidation?</button>
+    <button class="chip">how do I bridge funds to Solana?</button>
+  </div>
+
+  <div class="spin" id="spin">Searching the episodes…</div>
+
+  <div class="answer" id="answer">
+    <h3>Answer</h3>
+    <div id="answer-body"></div>
+  </div>
+
+  <div class="hits" id="hits"></div>
+
+  <div class="eps" id="eps" hidden>
+    <h2>Episode summaries</h2>
+    <p class="sub2">Every episode condensed to a 2-minute read, with
+    timestamps. Click to expand.</p>
+    <div id="eps-list"></div>
+  </div>
+
+  <div class="foot">
+    Semantic search over podcast transcripts · informational only, not
+    financial advice · built as an independent concept, not affiliated.
+  </div>
+</div>
+
+<script>
+(function(){
+  var API = "";
+  var f=document.getElementById("f"), q=document.getElementById("q"),
+      go=document.getElementById("go"), spin=document.getElementById("spin"),
+      answer=document.getElementById("answer"),
+      body=document.getElementById("answer-body"), hits=document.getElementById("hits");
+
+  document.querySelectorAll(".chip").forEach(function(c){
+    c.addEventListener("click",function(){ q.value=c.textContent; search(); });
+  });
+  f.addEventListener("submit",function(e){ e.preventDefault(); search(); });
+
+  function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML;}
+
+  // esc() only neutralizes & < > — fine for text content, but NOT for an
+  // attribute value (a " or ' would break out and inject attributes).
+  // escAttr() escapes quotes too; safeUrl() blocks javascript:/data: URLs so
+  // a malformed link field can't become a clickable script.
+  function escAttr(s){return String(s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function safeUrl(u){u=String(u).trim();
+    return /^(https?:|\/|#|\?)/i.test(u)?u:"#";}
+
+  // Minimal, XSS-safe markdown: escape everything first, then allow only
+  // **bold** and bullet lists that WE reconstruct from the escaped text.
+  function md(s){
+    var safe=esc(s);
+    safe=safe.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+    var lines=safe.split("\n"), out=[], inList=false;
+    lines.forEach(function(ln){
+      if(/^\s*[-•]\s+/.test(ln)){
+        if(!inList){out.push("<ul>");inList=true;}
+        out.push("<li>"+ln.replace(/^\s*[-•]\s+/,"")+"</li>");
+      }else{
+        if(inList){out.push("</ul>");inList=false;}
+        if(ln.trim()) out.push("<p>"+ln+"</p>");
+      }
+    });
+    if(inList) out.push("</ul>");
+    return out.join("");
+  }
+
+  // Turn [h:mm:ss] / [m:ss] markers in a summary into links that open the
+  // episode at that second on YouTube. Runs on md()'s escaped HTML, so the
+  // bracketed timestamps are plain literal text we can safely replace.
+  function linkifyTimestamps(html, url){
+    return html.replace(/\[(?:(\d+):)?(\d{1,2}):(\d{2})\]/g,
+      function(m, h, mm, ss){
+        var sec=(parseInt(h||0,10)*3600)+(parseInt(mm,10)*60)+parseInt(ss,10);
+        var link=url+(url.indexOf("?")>-1?"&":"?")+"t="+sec+"s";
+        return '<a class="ts" href="'+escAttr(safeUrl(link))+'" target="_blank" '+
+               'rel="noopener">'+m+'</a>';
+      });
+  }
+
+  function loadEpisodes(){
+    fetch(API+"/v1/episodes")
+      .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function(eps){
+        if(!eps.length) return;
+        var wrap=document.getElementById("eps-list");
+        eps.forEach(function(ep){
+          var d=document.createElement("details");
+          d.className="epcard";
+          var bodyHtml=linkifyTimestamps(md(ep.summary||""), ep.url||"");
+          d.innerHTML='<summary><span class="tw">▶</span>'+esc(ep.title)+
+            '</summary><div class="ep-body">'+bodyHtml+
+            '<a class="ep-link" href="'+escAttr(safeUrl(ep.url||""))+'" '+
+            'target="_blank" rel="noopener">Watch the full episode →</a></div>';
+          wrap.appendChild(d);
+        });
+        document.getElementById("eps").hidden=false;
+      })
+      .catch(function(){ /* summaries are optional — page works without */ });
+  }
+  loadEpisodes();
+
+  // Auto-caption text is messy ("Jose's Jose's eating... um") — tidy the
+  // preview snippet without altering what the model actually searched.
+  function cleanSnippet(s){
+    s=s.replace(/\[expletive\]/gi,"")
+       .replace(/\b(um+|uh+|like,)\s/gi," ")
+       .replace(/\b([\w']+)(\s+\1\b)+/gi,"$1")   // collapse stutter repeats
+       .replace(/\s+/g," ").trim();
+    if(s.length>150){
+      s=s.slice(0,150);
+      var sp=s.lastIndexOf(" ");
+      s=(sp>0?s.slice(0,sp):s)+"…";  // only trim to a space if one exists
+    }
+    return s;
+  }
+
+  function renderHits(list){
+    lastHits=list||[];  // for the shareable card's top-timestamp line
+    if(list && list.length){
+      var html='<h3>Jump to the moment</h3>';
+      list.forEach(function(h){
+        html+='<a class="hit" href="'+escAttr(safeUrl(h.deep_link))+'" target="_blank" rel="noopener">'
+          +'<div class="hit-top"><span class="play">▶ '+esc(h.timestamp)+'</span>'
+          +'<span class="ep">'+esc(h.title)+'</span>'
+          +'<span class="watch">watch on YouTube →</span></div>'
+          +'<div class="quote">'+esc(cleanSnippet(h.text))+'</div></a>';
+      });
+      hits.innerHTML=html;
+    } else {
+      hits.innerHTML='<p class="empty">No matching moments found. Try rephrasing.</p>';
+    }
+  }
+
+  var lastQuery="", lastHits=[];
+
+  // Render the current answer into a branded 1080x1080 PNG the user can
+  // download and attach to a tweet. Pure client-side canvas — no backend,
+  // no external library, works offline.
+  function wrapText(ctx,text,maxW){
+    var words=text.split(" "), lines=[], line="";
+    for(var i=0;i<words.length;i++){
+      var test=line?line+" "+words[i]:words[i];
+      if(ctx.measureText(test).width>maxW && line){ lines.push(line); line=words[i]; }
+      else line=test;
+    }
+    if(line) lines.push(line);
+    return lines;
+  }
+  function downloadCard(){
+    var C=document.createElement("canvas"); C.width=1080; C.height=1080;
+    var x=C.getContext("2d"), PAD=72, W=C.width-PAD*2;
+    x.fillStyle="#0b0e11"; x.fillRect(0,0,C.width,C.height);
+    x.fillStyle="#16c784"; x.fillRect(0,0,C.width,10);
+    // brand
+    x.font="700 30px -apple-system,Segoe UI,Roboto,sans-serif";
+    x.fillStyle="#e6e8ea"; x.fillText("MARKET ",PAD,110);
+    var mw=x.measureText("MARKET ").width;
+    x.fillStyle="#16c784"; x.fillText("BUBBLE",PAD+mw,110);
+    x.fillStyle="#8a939e"; x.fillText(" · search",PAD+mw+x.measureText("BUBBLE").width,110);
+    // question
+    var y=200;
+    x.fillStyle="#16c784"; x.font="700 46px -apple-system,Segoe UI,Roboto,sans-serif";
+    wrapText(x,lastQuery,W).slice(0,3).forEach(function(l){ x.fillText(l,PAD,y); y+=58; });
+    // answer (plain text, bold markers stripped, truncated to fit)
+    y+=30;
+    var ans=(document.getElementById("answer-body").textContent||"")
+      .replace(/\*\*/g,"").replace(/\s+/g," ").trim();
+    x.fillStyle="#c7ccd2"; x.font="400 34px -apple-system,Segoe UI,Roboto,sans-serif";
+    var lines=wrapText(x,ans,W), max=13;
+    lines.slice(0,max).forEach(function(l,i){
+      if(i===max-1 && lines.length>max) l=l.replace(/\s\S*$/,"")+" …";
+      x.fillText(l,PAD,y); y+=48;
+    });
+    // top timestamp
+    if(lastHits[0]){
+      y+=14; x.fillStyle="#16c784"; x.font="600 30px -apple-system,Segoe UI,Roboto,sans-serif";
+      var h=lastHits[0];
+      x.fillText("▶ "+h.timestamp+"  "+(h.title||"").slice(0,42),PAD,y);
+    }
+    // footer
+    x.fillStyle="#8a939e"; x.font="400 26px -apple-system,Segoe UI,Roboto,sans-serif";
+    x.fillText("threadguy-search.onrender.com — ask anything, jump to the moment",
+               PAD,C.height-PAD);
+    C.toBlob(function(blob){
+      var a=document.createElement("a");
+      a.href=URL.createObjectURL(blob);
+      a.download="market-bubble-answer.png"; a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); },5000);
+    },"image/png");
+  }
+
+  function addShareButton(){
+    if(document.getElementById("share-actions")) return;
+    var wrap=document.createElement("span");
+    wrap.id="share-actions";
+
+    var copy=document.createElement("button");
+    copy.className="share"; copy.textContent="share link";
+    copy.addEventListener("click",function(){
+      var url=location.origin+location.pathname+"?q="+encodeURIComponent(lastQuery);
+      (navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject())
+        .then(function(){ copy.textContent="copied ✓"; })
+        .catch(function(){ prompt("Copy this link:",url); });
+      setTimeout(function(){ copy.textContent="share link"; },2000);
+    });
+
+    var img=document.createElement("button");
+    img.className="share"; img.textContent="📸 save image";
+    img.style.marginLeft="8px";
+    img.addEventListener("click",downloadCard);
+
+    wrap.appendChild(copy); wrap.appendChild(img);
+    answer.querySelector("h3").appendChild(wrap);
+  }
+
+  function finishSearch(){
+    go.disabled=false; spin.classList.remove("show");
+    addShareButton();
+  }
+
+  // A new search cancels any in-flight one and bumps a token, so a stale
+  // stream (e.g. a chip clicked mid-answer) can't keep writing to the shared
+  // answer/hits elements after a newer search has started.
+  var inflight=null, runToken=0;
+
+  // Streaming search: hits render immediately, the answer types itself in.
+  // Falls back to the non-streaming endpoint if the stream fails.
+  function search(){
+    var query=q.value.trim();
+    if(!query) return;
+    lastQuery=query;
+    if(inflight) inflight.abort();
+    inflight=new AbortController();
+    var myToken=++runToken, mySignal=inflight.signal;
+    var stale=function(){ return myToken!==runToken; };
+    go.disabled=true; spin.classList.add("show");
+    answer.classList.remove("show"); hits.innerHTML="";
+
+    fetch(API+"/v1/search/stream",{
+      method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({query:query}),signal:mySignal
+    }).then(function(res){
+      if(!res.ok||!res.body) throw new Error("stream "+res.status);
+      var reader=res.body.getReader(), dec=new TextDecoder(), buf="", text="";
+      answer.classList.add("show"); body.textContent="";
+      function pump(){
+        return reader.read().then(function(step){
+          if(stale()) return;  // a newer search superseded this one
+          if(step.done){ body.innerHTML=md(text); finishSearch(); return; }
+          buf+=dec.decode(step.value,{stream:true});
+          var frames=buf.split("\n\n"); buf=frames.pop();
+          frames.forEach(function(frame){
+            var ev="message", data="";
+            frame.split("\n").forEach(function(ln){
+              if(ln.indexOf("event:")===0) ev=ln.slice(6).trim();
+              else if(ln.indexOf("data:")===0) data+=ln.slice(5).trim();
+            });
+            if(!data) return;
+            var p; try{ p=JSON.parse(data); }catch(e){ return; }
+            if(ev==="hits") renderHits(p);
+            else if(ev==="error") body.textContent="Search hiccuped — try again.";
+            // Plain text while streaming (fast, no partial-markdown flicker);
+            // md() render happens once on completion.
+            else if(p.text){ text+=p.text; body.textContent=text; }
+          });
+          return pump();
+        });
+      }
+      return pump();
+    }).catch(function(err){
+      if(stale()||(err&&err.name==="AbortError")) return;  // superseded
+      // Fallback: plain (non-streaming) search.
+      fetch(API+"/v1/search",{
+        method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({query:query}),signal:mySignal
+      }).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function(data){
+        if(stale()) return;
+        body.innerHTML=md(data.answer); answer.classList.add("show");
+        renderHits(data.hits);
+      }).catch(function(e){
+        if(stale()||(e&&e.name==="AbortError")) return;
+        body.textContent="Search is unavailable right now — please try again.";
+        answer.classList.add("show");
+      }).finally(function(){ if(!stale()) finishSearch(); });
+    });
+  }
+
+  // Shareable links: /demo/podcast.html?q=... auto-runs the search.
+  var shared=new URLSearchParams(location.search).get("q");
+  if(shared){ q.value=shared; search(); }
+})();
+</script>
+</body>
+</html>

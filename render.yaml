@@ -1,0 +1,31 @@
+# Render blueprint — search over Threadguy's back catalogue.
+#
+# Its own service on purpose. It shares a Pinecone index with the Market
+# Bubble search but writes and reads a different namespace, so neither can
+# return the other's content. Deploying them separately makes that isolation
+# a boundary rather than a filter someone has to remember to apply.
+services:
+  - type: web
+    name: threadguy-search
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: VOYAGE_API_KEY
+        sync: false
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: PINECONE_INDEX
+        value: bullpen-concierge
+      - key: RATE_LIMIT_RPM
+        value: "30"
+      - key: GLOBAL_RATE_LIMIT_RPM
+        value: "120"
+      # Bounds a bad day to a few dollars. See app/config.py.
+      - key: DAILY_REQUEST_BUDGET
+        value: "500"
