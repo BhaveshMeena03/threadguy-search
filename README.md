@@ -27,6 +27,18 @@ often in the title and barely spoken aloud, so embedding the passage alone
 made whole topics unreachable. The stored excerpt stays as the transcript, so
 a reader still sees what was actually said.
 
+## Summaries
+
+Search only helps someone who already knows what to ask. `make_summaries.py`
+condenses each episode to a two-minute read where every bullet carries a
+timestamp, so the page turns them into links straight into the video.
+
+It is a one-off batch job per episode and resumable — an episode that already
+has a summary is skipped, so a failed run costs nothing to finish. A summary
+that hits the token ceiling is refused rather than stored: a write cut off
+mid-sentence still looks valid in the JSON, and nothing downstream would
+catch it. Transcripts stay out of the runtime image; only the summaries ship.
+
 ## Isolation
 
 This shares a Pinecone index with a sibling project but uses its own
@@ -42,6 +54,7 @@ cp .env.example .env          # ANTHROPIC_API_KEY, VOYAGE_API_KEY, PINECONE_API_
 
 .venv/bin/python scripts/fetch_episodes.py --latest 10   # captions -> data/episodes.json
 .venv/bin/python scripts/ingest_episodes.py              # embed -> Pinecone
+.venv/bin/python scripts/make_summaries.py               # 2-min read per episode
 .venv/bin/uvicorn app.main:app --reload
 ```
 
@@ -56,7 +69,7 @@ twelve minutes. That is a rate limit, not a bug.
 |---|---|
 | `POST /v1/search` | answer plus timestamped hits |
 | `POST /v1/search/stream` | the same, streamed as SSE |
-| `GET /v1/episodes` | what's indexed |
+| `GET /v1/episodes` | what's indexed, with each episode's summary |
 | `POST /v1/ingest` | admin only, requires `X-Admin-Token` |
 | `GET /healthz` | liveness |
 

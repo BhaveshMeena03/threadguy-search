@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     # Episode summaries are a one-time batch job per episode; Sonnet 5 is
     # excellent at summarization at 60% less cost than Opus.
     summary_model: str = "claude-sonnet-5"
+    # A 2-minute read is ~350 words. 900 truncated 3 of 10 real episodes
+    # mid-bullet, so leave real headroom — generate() refuses to store a
+    # summary that hit the ceiling rather than shipping a cut-off one.
+    summary_max_tokens: int = 1400
     # Podcast search answers are 2-3 sentences over a few excerpts — a light
     # task. Haiku 4.5 handles grounded summarization well at ~1/5 the cost
     # of Sonnet, which stretches a small budget across far more queries.

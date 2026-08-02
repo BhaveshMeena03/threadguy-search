@@ -8,6 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 COPY demo ./demo
+COPY data/summaries.json ./data/summaries.json
 
 # Non-root runtime user.
 RUN useradd --create-home appuser

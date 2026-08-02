@@ -28,6 +28,7 @@ from voyageai import error as voyage_error
 
 from .podcast import REFUSAL_ANSWER, PodcastIndex
 from .schemas import Episode, PodcastSearchRequest, PodcastSearchResponse
+from .summaries import SUMMARY_PATH
 from .security import (
     daily_budget,
     global_rate_limit,
@@ -192,11 +193,20 @@ async def ingest(
 
 @app.get("/v1/episodes")
 async def episodes() -> list[dict]:
-    """What's indexed, from the manifest written at ingest time."""
-    path = _ROOT / "data" / "episodes.json"
-    if not path.exists():
+    """What's indexed, with each episode's 2-minute summary.
+
+    Served from data/summaries.json rather than episodes.json: the latter
+    carries full transcripts, which are ~100x larger and which nothing here
+    should ever hand to a browser.
+    """
+    if not SUMMARY_PATH.exists():
         return []
     return [
-        {"episode_id": e["episode_id"], "title": e["title"], "url": e["url"]}
-        for e in json.loads(path.read_text())
+        {
+            "episode_id": e["episode_id"],
+            "title": e["title"],
+            "url": e["url"],
+            "summary": e.get("summary", ""),
+        }
+        for e in json.loads(SUMMARY_PATH.read_text())
     ]
