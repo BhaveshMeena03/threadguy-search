@@ -15,7 +15,7 @@ class SourceType(StrEnum):
 
     DOCS = "docs"          # Markdown product documentation
     PODCAST = "podcast"    # stream transcripts
-    TWEET = "tweet"        # Scraped tweets (e.g. @blknoiz06, @bullpen)
+    TWEET = "tweet"        # unused here; kept so stored records parse
 
 
 class ChatTurn(BaseModel):

@@ -125,31 +125,30 @@
 
 <div class="wrap">
   <div class="topbar">
-    <div class="brand">MARKET <span>BUBBLE</span> · search</div>
+    <div class="brand">THREADGUY <span>·</span> search</div>
     <span style="display:inline-flex;gap:10px;flex-wrap:wrap">
-    <a class="navbtn" href="/demo/assets.html">📊 Every token they've analyzed
-      <span class="arrow">→</span></a>
-    <a class="navbtn" href="/demo/concierge.html">🐂 Bullpen Concierge
-      <span class="arrow">→</span></a>
+    <a class="navbtn" href="https://www.youtube.com/@notthreadguy"
+       target="_blank" rel="noopener">▶ the channel <span class="arrow">→</span></a>
     </span>
   </div>
   <h1>Ask <em>Threadguy's</em> streams anything.</h1>
   <p class="sub">Search every episode by meaning, not keywords — and jump
-  straight to the moment they said it.</p>
+  straight to the moment he said it.</p>
 
   <form id="f">
-    <input id="q" placeholder="e.g. what did they say about liquidation?"
+    <input id="q" placeholder="e.g. what happened with leopold?"
       autocomplete="off" maxlength="2000">
     <button id="go" type="submit">Search</button>
   </form>
 
   <div class="chips">
-    <button class="chip">what's a seed phrase and why does it matter?</button>
-    <button class="chip">how does leverage cause liquidation?</button>
-    <button class="chip">how do I bridge funds to Solana?</button>
+    <button class="chip">what happened with leopold?</button>
+    <button class="chip">what did ansem say about being bullish?</button>
+    <button class="chip">what does he think about china chips?</button>
+    <button class="chip">what is the lebron economy?</button>
   </div>
 
-  <div class="spin" id="spin">Searching the episodes…</div>
+  <div class="spin" id="spin">Searching the streams…</div>
 
   <div class="answer" id="answer">
     <h3>Answer</h3>
@@ -303,10 +302,10 @@
     x.fillStyle="#16c784"; x.fillRect(0,0,C.width,10);
     // brand
     x.font="700 30px -apple-system,Segoe UI,Roboto,sans-serif";
-    x.fillStyle="#e6e8ea"; x.fillText("MARKET ",PAD,110);
-    var mw=x.measureText("MARKET ").width;
-    x.fillStyle="#16c784"; x.fillText("BUBBLE",PAD+mw,110);
-    x.fillStyle="#8a939e"; x.fillText(" · search",PAD+mw+x.measureText("BUBBLE").width,110);
+    x.fillStyle="#e6e8ea"; x.fillText("THREADGUY ",PAD,110);
+    var mw=x.measureText("THREADGUY ").width;
+    x.fillStyle="#16c784"; x.fillText("·",PAD+mw,110);
+    x.fillStyle="#8a939e"; x.fillText(" search",PAD+mw+x.measureText("·").width,110);
     // question
     var y=200;
     x.fillStyle="#16c784"; x.font="700 46px -apple-system,Segoe UI,Roboto,sans-serif";

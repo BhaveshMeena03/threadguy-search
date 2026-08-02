@@ -1,4 +1,4 @@
-"""Central configuration for the Bullpen Concierge backend.
+"""Central configuration for the stream-search backend.
 
 All secrets and tunables are sourced from the environment (or a local
 `.env` file) via pydantic-settings, so nothing sensitive lives in code.
