@@ -22,7 +22,7 @@ from pathlib import Path
 import anthropic
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from voyageai import error as voyage_error
 
@@ -97,8 +97,14 @@ async def _unhandled(request: Request, exc: Exception):
 
 
 @app.get("/", include_in_schema=False)
-async def root() -> RedirectResponse:
-    return RedirectResponse(url="/demo/podcast.html")
+async def root() -> FileResponse:
+    """Serve the page at the bare domain rather than redirecting into /demo.
+
+    The redirect meant a shared link resolved to a different URL than the one
+    posted, so a cache-busting query string never survived to reach the social
+    scrapers — and they cache unfurls hard.
+    """
+    return FileResponse(_ROOT / "demo" / "podcast.html")
 
 
 @app.get("/healthz")
