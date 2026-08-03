@@ -12,6 +12,8 @@ from collections import OrderedDict
 import voyageai
 from voyageai import error as voyage_error
 
+from .config import get_settings
+
 logger = logging.getLogger(__name__)
 
 # Small LRU cache for single-text query embeddings. Query embeddings are
@@ -121,6 +123,10 @@ async def embed_texts(
                     i + 1, len(batches), attempt, wait,
                 )
                 await asyncio.sleep(wait)
-        if len(batches) > 1 and i < len(batches) - 1:
-            await asyncio.sleep(21)  # free tier: 3 requests/minute
+        # Pause between batches. Needed only on Voyage's free tier (3
+        # requests/minute); on a paid key it adds 21s per batch for nothing.
+        # The 429 retry above is the real protection either way.
+        gap = get_settings().voyage_request_gap_seconds
+        if gap and len(batches) > 1 and i < len(batches) - 1:
+            await asyncio.sleep(gap)
     return embeddings

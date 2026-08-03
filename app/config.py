@@ -56,6 +56,10 @@ class Settings(BaseSettings):
     # --- Voyage AI (embeddings — Anthropic's recommended partner) ----------
     voyage_api_key: str
     voyage_model: str = "voyage-3.5"
+    # Seconds to wait between embedding batches. 0 on a paid key; set to 21
+    # if the account is ever back on the free tier's 3 requests/minute.
+    # Rate limits are still handled by the 429 retry in embeddings.py.
+    voyage_request_gap_seconds: float = 0.0
     embedding_dimension: int = 1024
 
     # --- Pinecone -----------------------------------------------------------

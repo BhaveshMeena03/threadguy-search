@@ -153,11 +153,18 @@ def fetch(
                  "--sub-lang", "en", "--sub-format", "vtt", *common,
                  # --print alone implies simulate (nothing downloads!);
                  # --no-simulate makes it print the title AND write files.
-                 "--print", "%(title)s", "--no-simulate",
+                 # Title and airdate on one line — one call per episode;
+                 # two trips YouTube's rate limit.
+                 "--print", "%(title)s\t%(upload_date)s", "--no-simulate",
                  "-o", str(tmp_path / "%(id)s.%(ext)s"), url],
                 capture_output=True, text=True, check=False, env=env,
             )
-            title = (proc.stdout.strip().splitlines() or [title])[0]
+            first = (proc.stdout.strip().splitlines() or [title])[0]
+            title, _, raw_date = first.partition("\t")
+            title = title or video_id
+            published_at = (f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:]}"
+                            if len(raw_date) == 8 and raw_date.isdigit()
+                            else None)
             vtts = list(tmp_path.glob("*.vtt"))
             if vtts:
                 segments = coalesce(
@@ -167,7 +174,8 @@ def fetch(
                     print(f"  ✓ {video_id}: {len(segments)} segments — {title}")
                     return {
                         "episode_id": video_id, "title": title, "url": url,
-                        "platform": "youtube", "segments": segments,
+                        "platform": "youtube", "published_at": published_at,
+                        "segments": segments,
                     }
         if attempt < attempts:
             wait = 20 * attempt  # back off — YouTube throttles rapid pulls

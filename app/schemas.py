@@ -119,6 +119,10 @@ class PodcastHit(BaseModel):
     timestamp: str                 # "14:32"
     deep_link: str                 # url that jumps to start_seconds
     text: str
+    # When the stream aired. Optional because episodes indexed before dates
+    # were captured have none, and a missing date should degrade the answer
+    # rather than drop the hit.
+    published_at: str | None = None
     score: float
 
 

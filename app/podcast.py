@@ -41,7 +41,8 @@ REFUSAL_ANSWER = ("I can't help with that one — try asking about "
 SYSTEM_PROMPT = """\
 You answer questions about Threadguy's streams using ONLY the transcript \
 excerpts provided in <excerpts> tags. \
-Each excerpt is tagged with its episode and timestamp.
+Each excerpt is tagged with its episode, timestamp, and — when known — the \
+date the stream aired. Excerpts are given oldest first.
 
 Rules:
 1. Answer strictly from the excerpts. If they don't contain the answer, say \
@@ -50,11 +51,16 @@ knowledge and do not guess.
 2. Cite the moment: mention which episode and roughly when \
 ("around 14:30 in <episode>"). The interface shows clickable timestamps \
 alongside your answer, so refer to them naturally.
-3. Summarize faithfully. Do not put words in the hosts' mouths or invent \
+3. Mind the dates. If excerpts from different dates disagree, say so and \
+give the order ("in March he argued X; by July he'd shifted to Y") rather \
+than blending them into one view nobody held. When a question is about what \
+he thinks *now*, lean on the most recent excerpt and say how recent it is. \
+Never present a stale take as current.
+4. Summarize faithfully. Do not put words in the hosts' mouths or invent \
 quotes — paraphrase what the excerpt actually says.
-4. This is an informational search tool, not financial advice. Never add \
+5. This is an informational search tool, not financial advice. Never add \
 buy/sell recommendations or price predictions of your own.
-5. Keep it tight and conversational — a couple of sentences plus the \
+6. Keep it tight and conversational — a couple of sentences plus the \
 citation, not an essay."""
 
 
@@ -138,6 +144,12 @@ class PodcastIndex:
                         "platform": ep.platform,
                         "start_seconds": start_t,
                         "text": text,
+                        # Without this every chunk is timeless, and a take
+                        # from 2021 ranks against a 2026 correction on
+                        # wording alone. Pinecone metadata rejects None, so
+                        # undated episodes omit the key entirely.
+                        **({"published_at": ep.published_at}
+                           if ep.published_at else {}),
                     }
                 )
         if not rows:
@@ -238,6 +250,7 @@ class PodcastIndex:
                         md.get("url", ""), md.get("platform", "youtube"), start
                     ),
                     text=md.get("text", ""),
+                    published_at=md.get("published_at"),
                     score=match.score,
                 )
             )
@@ -259,12 +272,19 @@ class PodcastIndex:
     def _format(hits: list[PodcastHit]) -> str:
         if not hits:
             return "<excerpts>\n(nothing indexed matched this query)\n</excerpts>"
+        # Chronological, so a topic reads in the order it was discussed.
+        # Relevance order is what the hit list shows the user; the model
+        # needs the timeline. Undated excerpts sort last rather than
+        # inventing a position for them.
+        hits = sorted(hits, key=lambda h: (h.published_at is None,
+                                           h.published_at or "", h.start_seconds))
         # Transcript text/titles are untrusted third-party captions. XML-escape
         # them so a crafted window can't forge a closing </excerpt> tag and
         # break out of the data region the system prompt treats as grounding.
         blocks = [
-            f"<excerpt episode={quoteattr(h.title)} at={quoteattr(h.timestamp)}>"
-            f"\n{escape(h.text)}\n</excerpt>"
+            f"<excerpt episode={quoteattr(h.title)} at={quoteattr(h.timestamp)}"
+            + (f" aired={quoteattr(h.published_at)}" if h.published_at else "")
+            + f">\n{escape(h.text)}\n</excerpt>"
             for h in hits
         ]
         return "<excerpts>\n" + "\n\n".join(blocks) + "\n</excerpts>"
